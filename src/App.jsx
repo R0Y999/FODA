@@ -6,6 +6,8 @@ import ExportButtons from './components/ExportButtons/ExportButtons';
 import { generateFoda } from './services/ollama';
 import styles from './App.module.css';
 
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 export default function App() {
   const [fodaResult, setFodaResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -54,7 +56,7 @@ export default function App() {
         </p>
         <div className={styles.badge}>
           <span className={styles.badgeDot} />
-          Ollama · gemma4:e2b
+          {isLocal ? 'Ollama · gemma4:e2b' : 'Gemini · Google AI'}
         </div>
       </header>
 

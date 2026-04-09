@@ -1,4 +1,6 @@
+const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const OLLAMA_URL = '/api/chat';
+const GEMINI_URL = '/api/generate';
 const MODEL = 'gemma4:e2b';
 
 const FOCUS_PROMPTS = {
@@ -66,6 +68,38 @@ function isValidFoda(obj) {
 }
 
 export async function generateFoda(description, focus) {
+  if (IS_LOCAL) {
+    return generateViaOllama(description, focus);
+  }
+  return generateViaGemini(description, focus);
+}
+
+async function generateViaGemini(description, focus) {
+  let response;
+  try {
+    response = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description, focus }),
+    });
+  } catch (err) {
+    throw new Error('No se pudo conectar con el servidor. Intenta de nuevo.');
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || `Error del servidor (${response.status})`);
+  }
+
+  if (!isValidFoda(data)) {
+    throw new Error('La IA devolvió un formato inesperado. Intenta de nuevo.');
+  }
+
+  return data;
+}
+
+async function generateViaOllama(description, focus) {
   let response;
   try {
     response = await fetch(OLLAMA_URL, {
@@ -99,8 +133,6 @@ export async function generateFoda(description, focus) {
 
   const data = await response.json();
   const text = data.message?.content || '';
-
-  console.log('[FODA] Respuesta raw de Ollama:', text.substring(0, 500));
 
   const result = extractJSON(text);
   if (!result) {
