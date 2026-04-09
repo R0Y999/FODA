@@ -1,0 +1,82 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-fortalezas: #2e7d32;
+  --color-fortalezas-bg: #e8f5e9;
+  --color-fortalezas-border: #a5d6a7;
+
+  --color-oportunidades: #1565c0;
+  --color-oportunidades-bg: #e3f2fd;
+  --color-oportunidades-border: #90caf9;
+
+  --color-debilidades: #e65100;
+  --color-debilidades-bg: #fff3e0;
+  --color-debilidades-border: #ffcc80;
+
+  --color-amenazas: #c62828;
+  --color-amenazas-bg: #ffebee;
+  --color-amenazas-border: #ef9a9a;
+
+  --color-bg: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-surface: rgba(30, 41, 59, 0.8);
+  --color-surface-solid: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-border: rgba(148, 163, 184, 0.15);
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--color-bg);
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+textarea,
+select {
+  font-family: inherit;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
