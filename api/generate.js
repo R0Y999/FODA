@@ -58,13 +58,18 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      const msg = errData?.error?.message || response.statusText;
-
-      if (response.status === 429) {
-        return res.status(429).json({ error: 'Límite de peticiones alcanzado. Intenta de nuevo en un minuto.' });
+      const errText = await response.text().catch(() => '');
+      let errMsg;
+      try {
+        const errData = JSON.parse(errText);
+        errMsg = errData?.error?.message || response.statusText;
+      } catch {
+        errMsg = errText.substring(0, 300) || response.statusText;
       }
-      return res.status(response.status).json({ error: `Error de Gemini: ${msg}` });
+
+      return res.status(response.status).json({
+        error: `Error de Gemini (${response.status}): ${errMsg}`
+      });
     }
 
     const data = await response.json();
