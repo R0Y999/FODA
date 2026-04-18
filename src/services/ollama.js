@@ -1,5 +1,5 @@
 const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const OLLAMA_URL = '/api/chat';
+const OLLAMA_URL_LOCAL = IS_LOCAL ? '/api/chat' : 'http://localhost:11434/api/chat';
 const GEMINI_URL = '/api/generate';
 const MODEL = 'gemma4:e2b';
 
@@ -71,7 +71,21 @@ export async function generateFoda(description, focus) {
   if (IS_LOCAL) {
     return generateViaOllama(description, focus);
   }
-  return generateViaGemini(description, focus);
+
+  try {
+    return await generateViaGemini(description, focus);
+  } catch (geminiError) {
+    // Si Gemini falla y el error indica fallback, intentar Ollama local
+    if (geminiError.fallbackToLocal) {
+      try {
+        return await generateViaOllama(description, focus);
+      } catch {
+        // Si Ollama tampoco funciona, mostrar el error original de Gemini
+        throw geminiError;
+      }
+    }
+    throw geminiError;
+  }
 }
 
 async function generateViaGemini(description, focus) {
@@ -89,7 +103,9 @@ async function generateViaGemini(description, focus) {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || `Error del servidor (${response.status})`);
+    const err = new Error(data.error || `Error del servidor (${response.status})`);
+    if (data.fallbackToLocal) err.fallbackToLocal = true;
+    throw err;
   }
 
   if (!isValidFoda(data)) {
@@ -102,7 +118,7 @@ async function generateViaGemini(description, focus) {
 async function generateViaOllama(description, focus) {
   let response;
   try {
-    response = await fetch(OLLAMA_URL, {
+    response = await fetch(OLLAMA_URL_LOCAL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
