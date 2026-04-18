@@ -42,22 +42,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: buildPrompt(description, focus) }],
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
+    const MAX_RETRIES = 3;
+    const RETRY_DELAYS = [2000, 5000, 10000];
+    let response;
+    let lastError;
 
-    if (!response.ok) {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: buildPrompt(description, focus) }],
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
+
+      if (response.ok) break;
+
+      if (response.status === 429 && attempt < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt]));
+        continue;
+      }
+
       const errText = await response.text().catch(() => '');
       let errMsg;
       try {
@@ -65,6 +77,12 @@ export default async function handler(req, res) {
         errMsg = errData?.error?.message || response.statusText;
       } catch {
         errMsg = errText.substring(0, 300) || response.statusText;
+      }
+
+      if (response.status === 429) {
+        return res.status(429).json({
+          error: 'Demasiadas solicitudes a la IA. Espera unos 30 segundos e intenta de nuevo.'
+        });
       }
 
       return res.status(response.status).json({
